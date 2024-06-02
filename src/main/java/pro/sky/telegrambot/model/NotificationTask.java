@@ -15,6 +15,7 @@ public class NotificationTask {
     private String text;
     private LocalDateTime taskDate;
 
+
     public NotificationTask() {
     }
 
@@ -48,6 +49,16 @@ public class NotificationTask {
 
     public void setTaskDate(LocalDateTime taskDate) {
         this.taskDate = taskDate;
+    }
+
+    @Override
+    public String toString() {
+        return "NotificationTask{" +
+                "id=" + id +
+                ", chatId=" + chatId +
+                ", text='" + text + '\'' +
+                ", taskDate=" + taskDate +
+                '}';
     }
 
     @Override
