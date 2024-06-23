@@ -18,6 +18,10 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.regex.Pattern;
 
+/**
+ * @author Home
+ * class listenera
+ */
 @Service
 public class TelegramBotUpdatesListener implements UpdatesListener {
     private static final Logger logger = LoggerFactory.getLogger(TelegramBotUpdatesListener.class);
@@ -77,6 +81,14 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
     }
 
+    /**
+     * Setting the date format
+     * the repository method is used {@link DateTimeFormatter#parse(CharSequence)}
+     * {@code logger.error("Incorrect date format: {}", date);}
+     * @param date
+     * @throws DateTimeParseException if date is not correct
+     * @return
+     */
     private LocalDateTime parseDate(String date) {
         try {
             return LocalDateTime.parse(date, DATE_TIME_FORMATTER);
