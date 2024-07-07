@@ -3,24 +3,16 @@ package pro.sky.telegrambot.listener;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
 import com.pengrad.telegrambot.model.Update;
-import com.pengrad.telegrambot.model.request.ReplyKeyboardMarkup;
 import com.pengrad.telegrambot.request.SendMessage;
-import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import pro.sky.telegrambot.entyty.Cats;
-import pro.sky.telegrambot.entyty.Dogs;
 import pro.sky.telegrambot.repository.NotificationTaskRepository;
 
 import javax.annotation.PostConstruct;
@@ -85,29 +77,6 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
     }
 
-
-
-    public String Cats(List<Update> updates) {
-        updates.forEach(update -> {
-            logger.info("Processing update: {}", update);
-            var message = update.message();
-            if (message != null) {
-                var text = update.message().text();
-                var chatId = update.message().chat().id();
-                if (text != null) {
-                    if ("/Cats".equals(text)) {
-
-                        telegramBot.execute(new SendMessage(chatId, "Желаете приютить кошку?"));
-                    } else if ("/menu".equals(text)) {
-
-                        var sendMessage = new SendMessage(chatId, "");
-
-                    }
-                }
-            }
-        });
-        return null;
-    }
 }
 
 
