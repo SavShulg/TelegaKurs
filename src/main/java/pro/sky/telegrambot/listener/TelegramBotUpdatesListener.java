@@ -66,11 +66,12 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                     if ("/start".equals(text)) {
 
                         telegramBot.execute(new SendMessage(chatId, "Добро пожаловать!"));
-                    } else if ("/menu".equals(text)) {
 
-                        var sendMessage = new SendMessage(chatId, "");
+                    } else if ("/volonteer".equals(text)) {
+                        telegramBot.execute(new SendMessage(chatId, "К сожалению свободных волонтеров нет"));
 
                     }
+
                 }
             }
         });
