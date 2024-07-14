@@ -2,20 +2,20 @@ package pro.sky.telegrambot.notification;
 
 import com.pengrad.telegrambot.TelegramBot;
 import org.springframework.stereotype.Service;
-import pro.sky.telegrambot.repository.NotificationTaskRepository;
+import pro.sky.telegrambot.repository.CatsRepository;
 
 import java.util.logging.Logger;
 
 @Service
-public class NotificationScheduler {
+public class CatScheduler {
 
     private static final Logger log = Logger.getAnonymousLogger();
     public final TelegramBot telegramBot;
-    private final NotificationTaskRepository repository;
 
+    private final CatsRepository catsRepository;
 
-    public NotificationScheduler(TelegramBot telegramBot, NotificationTaskRepository repository) {
+    public CatScheduler(TelegramBot telegramBot, CatsRepository catsRepository) {
         this.telegramBot = telegramBot;
-        this.repository = repository;
+        this.catsRepository = catsRepository;
     }
 }
