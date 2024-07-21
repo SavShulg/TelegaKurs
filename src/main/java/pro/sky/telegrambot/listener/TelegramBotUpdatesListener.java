@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import pro.sky.telegrambot.configuration.TelegramBotConfiguration;
 import pro.sky.telegrambot.repository.CatsRepository;
 import pro.sky.telegrambot.repository.NotificationTaskRepository;
+
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
@@ -69,8 +70,6 @@ class TelegramBotUpdatesListener implements UpdatesListener {
     })
 
 
-
-
     @Override
     public int process(List<Update> updates) {
         updates.forEach(update -> {
@@ -83,15 +82,14 @@ class TelegramBotUpdatesListener implements UpdatesListener {
                 if (text != null) {
                     if ("/start".equals(text)) {
                         telegramBot.execute(new SendMessage(chatId, "Добро пожаловать!"));
-                    }
-                    else if ("/info".equals(text)) {
+                    } else if ("/info".equals(text)) {
                         telegramBot.execute(new SendMessage(chatId, INFO));
-                    }
-                    else if ("/Dogs".equals(text)) {
+                    } else if ("/Dogs".equals(text)) {
                         telegramBot.execute(new SendMessage(chatId, "Собака - лучший друг человека!"));
-                    }
-                    else if ("/Cats".equals(text)) {
+                    } else if ("/Cats".equals(text)) {
                         telegramBot.execute(new SendMessage(chatId, "Кошки милые, уважаем ваш выбор!"));
+                    } else if ("/Volunteer".equals(text)) {
+                        telegramBot.execute(new SendMessage(chatId, "Если у вас остались вопросы, воспользуйтесь услугами волонтера"));
 
                     } else telegramBot.execute(new SendMessage(chatId, "Извините, такая команда не поддерживается :("));
                 }
