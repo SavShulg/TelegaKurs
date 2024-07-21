@@ -1,5 +1,4 @@
 package pro.sky.telegrambot.model;
-
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -14,6 +13,7 @@ public class NotificationTask {
     private long chatId;
     private String text;
     private LocalDateTime taskDate;
+
 
     public NotificationTask() {
     }
@@ -51,6 +51,16 @@ public class NotificationTask {
     }
 
     @Override
+    public String toString() {
+        return "NotificationTask{" +
+                "id=" + id +
+                ", chatId=" + chatId +
+                ", text='" + text + '\'' +
+                ", taskDate=" + taskDate +
+                '}';
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -63,3 +73,4 @@ public class NotificationTask {
         return Objects.hash(id, chatId, text, taskDate);
     }
 }
+
