@@ -59,7 +59,7 @@ class VolunteerServiceTest {
         Volunteer volunteer1 = new Volunteer();
         Volunteer volunteer2 = new Volunteer();
         Volunteer volunteer3 = new Volunteer();
-        when(volunteerRepository.findById(1)).thenReturn(Optional.of(volunteer2));
+        when(volunteerRepository.findById(1L)).thenReturn(Optional.of(volunteer2));
         assertEquals(volunteer2, out.findVolunteerById(1));
 
     }

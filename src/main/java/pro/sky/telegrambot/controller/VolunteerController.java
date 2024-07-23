@@ -1,10 +1,10 @@
 package pro.sky.telegrambot.controller;
 
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import pro.sky.telegrambot.entyty.Volunteer;
+import pro.sky.telegrambot.model.Volunteer;
 import pro.sky.telegrambot.service.VolunteerService;
-
 
 @RestController
 @RequestMapping("/volunteers")

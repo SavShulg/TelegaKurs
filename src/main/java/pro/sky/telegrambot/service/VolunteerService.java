@@ -3,12 +3,11 @@ package pro.sky.telegrambot.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import pro.sky.telegrambot.entyty.Volunteer;
+import pro.sky.telegrambot.model.Volunteer;
 import pro.sky.telegrambot.repository.VolunteerRepository;
 
 import java.util.Collection;
 import java.util.Optional;
-
 
 @Service
 
