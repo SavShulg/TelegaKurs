@@ -8,10 +8,10 @@ import java.util.Optional;
 
 
 @Repository
-public interface VolunteerRepository extends JpaRepository<Volunteer, Long> {
+public interface VolunteerRepository extends JpaRepository<Volunteer,  Long> {
 
-    Volunteer findByNameVolunteer(String firstName);
+    Volunteer findByNameVolunteer(String firstName) ;
 
-    Optional<Volunteer> findByChatId(long chatId);
-    Optional<Volunteer> findFirstByIsBusy(boolean bool);
+    Optional<Volunteer> findByChatId(long chatId) ;
+    Optional<Volunteer> findFirstByIsBusy(boolean bool) ;
 }
