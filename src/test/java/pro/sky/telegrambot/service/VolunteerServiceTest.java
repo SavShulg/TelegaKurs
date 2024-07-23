@@ -6,7 +6,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.mockito.junit.jupiter.MockitoExtension;
-import pro.sky.telegrambot.entyty.Volunteer;
+
+import pro.sky.telegrambot.model.Volunteer;
 import pro.sky.telegrambot.repository.VolunteerRepository;
 
 import java.util.ArrayList;
