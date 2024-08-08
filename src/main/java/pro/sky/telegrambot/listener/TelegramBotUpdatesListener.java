@@ -23,11 +23,10 @@ import org.springframework.stereotype.Service;
 import pro.sky.telegrambot.configuration.TelegramBotConfiguration;
 import pro.sky.telegrambot.constants.Constants;
 import pro.sky.telegrambot.model.User;
-import pro.sky.telegrambot.repository.CatsRepository;
-import pro.sky.telegrambot.repository.DogsRepository;
-import pro.sky.telegrambot.repository.NotificationTaskRepository;
-import pro.sky.telegrambot.repository.UserRepository;
+import pro.sky.telegrambot.model.Volunteer;
+import pro.sky.telegrambot.repository.*;
 import pro.sky.telegrambot.service.SaveContactData;
+import pro.sky.telegrambot.service.VolunteerService;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
@@ -55,17 +54,19 @@ class TelegramBotUpdatesListener implements UpdatesListener {
     private DogsRepository dogsRepository;
     private static Constants constants;
     private final UserRepository userRepository;
+    private final VolunteerRepository volunteerRepository;
 
 
-    public TelegramBotUpdatesListener(TelegramBotConfiguration config, TelegramBot telegramBot,
-                                      NotificationTaskRepository repository, CatsRepository catsRepository,
-                                      DogsRepository dogsRepository, UserRepository userRepository) {
+    public TelegramBotUpdatesListener(TelegramBotConfiguration config, TelegramBot telegramBot, NotificationTaskRepository repository,
+                                      CatsRepository catsRepository, DogsRepository dogsRepository,
+                                      UserRepository userRepository, VolunteerRepository volunteerRepository) {
         this.config = config;
         this.telegramBot = telegramBot;
         this.repository = repository;
         this.catsRepository = catsRepository;
         this.dogsRepository = dogsRepository;
         this.userRepository = userRepository;
+        this.volunteerRepository = volunteerRepository;
     }
 
     @PostConstruct
@@ -127,6 +128,13 @@ class TelegramBotUpdatesListener implements UpdatesListener {
 
                     } else if ("/Call volunteer".equals(text)) {
                         telegramBot.execute(new SendMessage(chatId, Constants.CALL_VOLUNTEER));
+                        if (Constants.CALL_VOLUNTEER != null) {
+                            VolunteerService volunteerService = new VolunteerService(volunteerRepository);
+                            volunteerService.getAllVolunteers();
+                            volunteerRepository.getById(chatId);
+                            telegramBot.execute(new SendMessage(chatId, "Волонтеры уведомлены о вас." +
+                                    "в скором времени они с вами свяжутся"));
+                        }
                     } else if ("/Dog trainer advice".equals(text)) {
                         telegramBot.execute(new SendMessage(chatId, Constants.ADVICEDOGHADLER));
                         telegramBot.execute(new SendMessage(chatId, Constants.RECOMMENDEDDOGHANDLER));
@@ -145,6 +153,7 @@ class TelegramBotUpdatesListener implements UpdatesListener {
                         telegramBot.execute(new SendMessage(chatId, "Спасибо, данные сохранены."));
 
                     }
+
 
                 } else {
                     telegramBot.execute(new SendMessage(chatId, "Извините, такая команда не поддерживается :("));
