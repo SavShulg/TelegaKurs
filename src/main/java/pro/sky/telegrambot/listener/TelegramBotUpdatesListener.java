@@ -55,11 +55,13 @@ class TelegramBotUpdatesListener implements UpdatesListener {
     private static Constants constants;
     private final UserRepository userRepository;
     private final VolunteerRepository volunteerRepository;
+    private final VolunteerService volunteerService;
 
 
-    public TelegramBotUpdatesListener(TelegramBotConfiguration config, TelegramBot telegramBot, NotificationTaskRepository repository,
-                                      CatsRepository catsRepository, DogsRepository dogsRepository,
-                                      UserRepository userRepository, VolunteerRepository volunteerRepository) {
+    public TelegramBotUpdatesListener(TelegramBotConfiguration config, TelegramBot telegramBot,
+                                      NotificationTaskRepository repository, CatsRepository catsRepository,
+                                      DogsRepository dogsRepository, UserRepository userRepository,
+                                      VolunteerRepository volunteerRepository, VolunteerService volunteerService) {
         this.config = config;
         this.telegramBot = telegramBot;
         this.repository = repository;
@@ -67,6 +69,7 @@ class TelegramBotUpdatesListener implements UpdatesListener {
         this.dogsRepository = dogsRepository;
         this.userRepository = userRepository;
         this.volunteerRepository = volunteerRepository;
+        this.volunteerService = volunteerService;
     }
 
     @PostConstruct
@@ -129,7 +132,6 @@ class TelegramBotUpdatesListener implements UpdatesListener {
                     } else if ("/Call volunteer".equals(text)) {
                         telegramBot.execute(new SendMessage(chatId, Constants.CALL_VOLUNTEER));
                         if (Constants.CALL_VOLUNTEER != null) {
-                            VolunteerService volunteerService = new VolunteerService(volunteerRepository);
                             volunteerService.getAllVolunteers();
                             volunteerRepository.getById(chatId);
                             telegramBot.execute(new SendMessage(chatId, "Волонтеры уведомлены о вас." +
