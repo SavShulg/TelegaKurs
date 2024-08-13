@@ -1,16 +1,11 @@
 package pro.sky.telegrambot.listener;
 
-import com.pengrad.telegrambot.Callback;
+
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
-import com.pengrad.telegrambot.model.CallbackQuery;
-import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.Update;
 import com.pengrad.telegrambot.model.request.*;
-import com.pengrad.telegrambot.request.BaseRequest;
 import com.pengrad.telegrambot.request.SendMessage;
-import com.pengrad.telegrambot.response.BaseResponse;
-import com.pengrad.telegrambot.response.SendResponse;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -22,18 +17,12 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import pro.sky.telegrambot.configuration.TelegramBotConfiguration;
 import pro.sky.telegrambot.constants.Constants;
+import pro.sky.telegrambot.model.Report;
 import pro.sky.telegrambot.model.User;
-import pro.sky.telegrambot.model.Volunteer;
 import pro.sky.telegrambot.repository.*;
-import pro.sky.telegrambot.service.SaveContactData;
 import pro.sky.telegrambot.service.VolunteerService;
-
 import javax.annotation.PostConstruct;
-import java.io.IOException;
 import java.util.List;
-import java.util.Scanner;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 
 /**
@@ -50,6 +39,7 @@ class TelegramBotUpdatesListener implements UpdatesListener {
     private final TelegramBotConfiguration config;
     private final TelegramBot telegramBot;
     private final NotificationTaskRepository repository;
+    private final ReportRepository reportRepository;
     private CatsRepository catsRepository;
     private DogsRepository dogsRepository;
     private static Constants constants;
@@ -61,7 +51,7 @@ class TelegramBotUpdatesListener implements UpdatesListener {
     public TelegramBotUpdatesListener(TelegramBotConfiguration config, TelegramBot telegramBot,
                                       NotificationTaskRepository repository, CatsRepository catsRepository,
                                       DogsRepository dogsRepository, UserRepository userRepository,
-                                      VolunteerRepository volunteerRepository, VolunteerService volunteerService) {
+                                      VolunteerRepository volunteerRepository, VolunteerService volunteerService, ReportRepository reportRepository) {
         this.config = config;
         this.telegramBot = telegramBot;
         this.repository = repository;
@@ -70,6 +60,7 @@ class TelegramBotUpdatesListener implements UpdatesListener {
         this.userRepository = userRepository;
         this.volunteerRepository = volunteerRepository;
         this.volunteerService = volunteerService;
+        this.reportRepository = reportRepository;
     }
 
     @PostConstruct
@@ -105,7 +96,8 @@ class TelegramBotUpdatesListener implements UpdatesListener {
                                 new String[]{"/Adopt an animal", "/Info"},
                                 new String[]{"/Dogs", "/Cats"},
                                 new String[]{"/Dog trainer advice", "/Call volunteer"},
-                                new String[]{"/Write data"});
+                                new String[]{"/Write data"},
+                                new String[]{"/Send report", "/Report help"});
                         replyKeyboardMarkup.oneTimeKeyboard(true);
                         replyKeyboardMarkup.resizeKeyboard(true);
                         replyKeyboardMarkup.selective(true);
@@ -144,7 +136,6 @@ class TelegramBotUpdatesListener implements UpdatesListener {
                         telegramBot.execute(new SendMessage(chatId, "Собака - лучший друг человека!"));
                     } else if ("/Cats".equals(text)) {
                         telegramBot.execute(new SendMessage(chatId, "Кошки милые, уважаем ваш выбор!"));
-
                     } else if (text.contains("+")) {
                         String[] result = text.split(" ");
                         User user = new User();
@@ -154,24 +145,25 @@ class TelegramBotUpdatesListener implements UpdatesListener {
                         userRepository.save(user);
                         telegramBot.execute(new SendMessage(chatId, "Спасибо, данные сохранены."));
 
+                    } else if ("/Report help".equals(text)) {
+                        telegramBot.execute(new SendMessage(chatId, Constants.REPORT_HElP));
+
+                    } else if (text.contains("/Send report")) {
+                        String[] sendReport = text.split(" ");
+                        Report report = new Report();
+                        report.setIdReport(Long.parseLong(sendReport[0]));
+                        report.setTheDiet(sendReport[1]);
+                        report.setBehaviour(sendReport[2]);
+                        report.setWellBeing(sendReport[3]);
+                        report.setHabits(sendReport[4]);
+                        reportRepository.save(report);
+                        telegramBot.execute(new SendMessage(chatId, "Спасибо, данные сохранены."));
                     }
-
-
                 } else {
                     telegramBot.execute(new SendMessage(chatId, "Извините, такая команда не поддерживается :("));
                 }
-
             }
         });
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
     }
-
-
 }
-
-
-
-
-
-
-
