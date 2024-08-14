@@ -1,5 +1,8 @@
 package pro.sky.telegrambot.model;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import javax.persistence.*;
+import java.time.LocalDate;
 import java.util.Objects;
 
 @Entity
@@ -11,18 +14,39 @@ public class Cats {
     private String nameCat;
     private String breed;
     private String food;
+    @ManyToOne
+    private User user;
+    private LocalDate dateAdoption;
     private int age;
 
-    public Cats(long idCat, String nameCat, String breed, String food, int age) {
+    public Cats(long idCat, String nameCat, String breed, String food, User user, LocalDate dateAdoption, int age) {
         this.idCat = idCat;
         this.nameCat = nameCat;
         this.breed = breed;
         this.food = food;
+        this.user = user;
+        this.dateAdoption = dateAdoption;
         this.age = age;
     }
 
     public Cats() {
 
+    }
+
+    public LocalDate getDateAdoption() {
+        return dateAdoption;
+    }
+
+    public void setDateAdoption(LocalDate dateAdoption) {
+        this.dateAdoption = dateAdoption;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public long getIdCat() {
