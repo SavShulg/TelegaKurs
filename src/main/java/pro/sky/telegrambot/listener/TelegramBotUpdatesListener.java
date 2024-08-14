@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import pro.sky.telegrambot.configuration.TelegramBotConfiguration;
 import pro.sky.telegrambot.constants.Constants;
 import pro.sky.telegrambot.model.AppPhoto;
+import pro.sky.telegrambot.model.Report;
 import pro.sky.telegrambot.model.User;
 import pro.sky.telegrambot.model.Volunteer;
 import pro.sky.telegrambot.repository.*;
@@ -61,13 +62,14 @@ class TelegramBotUpdatesListener implements UpdatesListener {
     private final PhotoRepository photoRepository;
     private final PhotoService photoService;
     private final NotificationScheduler notificationScheduler;
+    private final ReportRepository reportRepository;
 
 
     public TelegramBotUpdatesListener(TelegramBotConfiguration config, TelegramBot telegramBot,
                                       NotificationTaskRepository repository, CatsRepository catsRepository,
                                       DogsRepository dogsRepository, UserRepository userRepository,
                                       VolunteerRepository volunteerRepository, VolunteerService volunteerService,
-                                      PhotoRepository photoRepository, PhotoService photoService, NotificationScheduler notificationScheduler) {
+                                      PhotoRepository photoRepository, PhotoService photoService, NotificationScheduler notificationScheduler, ReportRepository reportRepository) {
         this.config = config;
         this.telegramBot = telegramBot;
         this.repository = repository;
@@ -79,6 +81,7 @@ class TelegramBotUpdatesListener implements UpdatesListener {
         this.photoRepository = photoRepository;
         this.photoService = photoService;
         this.notificationScheduler = notificationScheduler;
+        this.reportRepository = reportRepository;
     }
 
     @PostConstruct
@@ -114,7 +117,8 @@ class TelegramBotUpdatesListener implements UpdatesListener {
                                 new String[]{"/Adopt an animal", "/Info"},
                                 new String[]{"/Dogs", "/Cats"},
                                 new String[]{"/Dog trainer advice", "/Call volunteer"},
-                                new String[]{"/Write data", "/Send report"});
+                                new String[]{"/Write data", "/Send report"},
+                                new String[]{"/Report help"});
                         replyKeyboardMarkup.oneTimeKeyboard(true);
                         replyKeyboardMarkup.resizeKeyboard(true);
                         replyKeyboardMarkup.selective(true);
@@ -163,21 +167,32 @@ class TelegramBotUpdatesListener implements UpdatesListener {
                         userRepository.save(user);
                         telegramBot.execute(new SendMessage(chatId, "Спасибо, данные сохранены."));
 
+                    } else if ("/Report help".equals(text)) {
+                        telegramBot.execute(new SendMessage(chatId, Constants.REPORT_HElP));
+
                     } else if (text.contains("/Send report")) {
 
-                        if (update.message() != null && update.message().photo() != null) {
-                            photoService.uploadPhoto(update.message());
-                            telegramBot.execute(new SendMessage(chatId, "Теперь напишите нам о рационе, состоянии поведения питомца," +
-                                    "общем самочувствии, привыканию к новому месту, новые обретенные привычки.\n" +
-                                    "В данном формате\n" +
-                                    "1. Рацион\n" +
-                                    "2. Поведение\n" +
-                                    "3. Общее самочувствие и привыкание к новому месту\n" +
-                                    "4. Новые привычки\n"));
-                        }
-                        notificationScheduler.sendDailyMessage();
+                        String[] sendReport = text.split(" ");
+                        Report report = new Report();
+                        report.setIdReport(Long.parseLong(sendReport[0]));
+                        report.setTheDiet(sendReport[1]);
+                        report.setBehaviour(sendReport[2]);
+                        report.setWellBeing(sendReport[3]);
+                        report.setHabits(sendReport[4]);
+                        reportRepository.save(report);
+                        telegramBot.execute(new SendMessage(chatId, "Спасибо, данные сохранены."));
                     }
-
+                    notificationScheduler.sendDailyMessage();
+                }
+                if (update.message() != null && update.message().photo() != null) {
+                    photoService.uploadPhoto(update.message());
+                    telegramBot.execute(new SendMessage(chatId, "Теперь напишите нам о рационе, состоянии поведения питомца," +
+                            "общем самочувствии, привыканию к новому месту, новые обретенные привычки.\n" +
+                            "В данном формате\n" +
+                            "1. Рацион\n" +
+                            "2. Поведение\n" +
+                            "3. Общее самочувствие и привыкание к новому месту\n" +
+                            "4. Новые привычки\n"));
 
                 } else {
                     telegramBot.execute(new SendMessage(chatId, "Извините, такая команда не поддерживается :("));
