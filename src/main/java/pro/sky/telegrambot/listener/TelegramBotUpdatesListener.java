@@ -111,8 +111,8 @@ class TelegramBotUpdatesListener implements UpdatesListener {
             logger.info("Processing update: {}", update);
             var message = update.message();
             if (message != null) {
-                var text = update.message().text();
-                var chatId = update.message().chat().id();
+                var text = message.text();
+                var chatId = message.chat().id();
 
 
                 if (text != null) {
@@ -187,9 +187,12 @@ class TelegramBotUpdatesListener implements UpdatesListener {
                         telegramBot.execute(new SendMessage(chatId, "Спасибо, данные сохранены."));
 
                     } else if (reportStates.get(chatId) != null) {
-                    methodReport(text, chatId);
-                }
+                        methodReport(text, chatId);
+                    } else {
+                        telegramBot.execute(new SendMessage(chatId, "Извините, такая команда не поддерживается :("));
+                    }
                     notificationScheduler.sendDailyMessage();
+
                 }
                 if (update.message() != null && update.message().photo() != null) {
                     photoService.uploadPhoto(update.message());
@@ -200,15 +203,13 @@ class TelegramBotUpdatesListener implements UpdatesListener {
                             "2. Поведение\n" +
                             "3. Общее самочувствие и привыкание к новому месту\n" +
                             "4. Новые привычки\n"));
-
-                } else {
-                    telegramBot.execute(new SendMessage(chatId, "Извините, такая команда не поддерживается :("));
                 }
 
             }
         });
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
     }
+
     private void methodReport(String message, Long userId) {
         Report report = reportStates.get(userId);
         String response;
@@ -228,7 +229,9 @@ class TelegramBotUpdatesListener implements UpdatesListener {
                     response = "Общее самочувствие и привыкание к новому месту";
                     report.setState("COMPLETED");
                 } else {
-                    response = "не валидные данные по поведению";
+                    response = "Дорогой усыновитель, мы заметили, что ты заполняешь отчет не так подробно, как необходимо." +
+                            " Пожалуйста, подойди ответственнее к этому занятию. " +
+                            "В противном случае волонтеры приюта будут обязаны самолично проверять условия содержания животного";
                 }
                 break;
             case "COMPLETED":
@@ -247,6 +250,8 @@ class TelegramBotUpdatesListener implements UpdatesListener {
 
 
 }
+
+
 
 
 
