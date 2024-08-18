@@ -33,7 +33,9 @@ import pro.sky.telegrambot.service.VolunteerService;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -63,6 +65,8 @@ class TelegramBotUpdatesListener implements UpdatesListener {
     private final PhotoService photoService;
     private final NotificationScheduler notificationScheduler;
     private final ReportRepository reportRepository;
+
+    private Map<Long, Report> reportStates = new HashMap<>();
 
 
     public TelegramBotUpdatesListener(TelegramBotConfiguration config, TelegramBot telegramBot,
@@ -181,7 +185,10 @@ class TelegramBotUpdatesListener implements UpdatesListener {
                         report.setHabits(sendReport[4]);
                         reportRepository.save(report);
                         telegramBot.execute(new SendMessage(chatId, "Спасибо, данные сохранены."));
-                    }
+
+                    } else if (reportStates.get(chatId) != null) {
+                    methodReport(text, chatId);
+                }
                     notificationScheduler.sendDailyMessage();
                 }
                 if (update.message() != null && update.message().photo() != null) {
@@ -201,6 +208,41 @@ class TelegramBotUpdatesListener implements UpdatesListener {
             }
         });
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
+    }
+    private void methodReport(String message, Long userId) {
+        Report report = reportStates.get(userId);
+        String response;
+        switch (report.getState()) {
+            case "SEND_REPORT":
+                response = "Введите Рацион";
+                report.setState("THE_DIET");
+                break;
+            case "THE_DIET":
+                report.setTheDiet(message);
+                response = "Поведение";
+                report.setState("BEHAVIOUR");
+                break;
+            case "BEHAVIOUR":
+                if (message.matches("[а-яА-Я ,.]+")) {
+                    report.setBehaviour(message);
+                    response = "Общее самочувствие и привыкание к новому месту";
+                    report.setState("COMPLETED");
+                } else {
+                    response = "не валидные данные по поведению";
+                }
+                break;
+            case "COMPLETED":
+                response = "Спасибо! Все данные получены.";
+                reportRepository.save(report);
+                break;
+            default:
+                response = "Неизвестное состояние.";
+                break;
+        }
+
+        // Сохранение обновленного состояния пользователя
+        reportStates.put(userId, report);
+        telegramBot.execute(new SendMessage(userId, response));
     }
 
 

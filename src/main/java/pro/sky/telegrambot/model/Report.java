@@ -13,6 +13,7 @@ public class Report {
     private String behaviour; // поведение
     private String wellBeing; // Общее самочувствие питомца
     private String habits;
+    private String state;
 
 
 
@@ -71,4 +72,11 @@ public class Report {
     }
 
 
+    public String getState() {
+        return state;
+    }
+
+    public void setState(String state) {
+        this.state = state;
+    }
 }
