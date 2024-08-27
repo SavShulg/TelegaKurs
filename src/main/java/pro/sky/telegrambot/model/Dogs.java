@@ -1,5 +1,6 @@
 package pro.sky.telegrambot.model;
 import javax.persistence.*;
+import java.time.LocalDate;
 import java.util.Objects;
 @Entity
 @Table(name = "Dogs")
@@ -14,18 +15,39 @@ public class Dogs {
     private String nameDog;
     private String breed;
     private String food;
+    @ManyToOne
+    private User user;
+    private LocalDate dateAdoption;
     private int age;
 
-    public Dogs(long idDog, String nameDog, String breed, String food, int age) {
+    public Dogs(long idDog, String nameDog, String breed, String food, User user, LocalDate dateAdoption, int age) {
         this.idDog = idDog;
         this.nameDog = nameDog;
         this.breed = breed;
         this.food = food;
+        this.user = user;
+        this.dateAdoption = dateAdoption;
         this.age = age;
     }
 
     public Dogs() {
 
+    }
+
+    public LocalDate getDateAdoption() {
+        return dateAdoption;
+    }
+
+    public void setDateAdoption(LocalDate dateAdoption) {
+        this.dateAdoption = dateAdoption;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public long getIdDog() {
