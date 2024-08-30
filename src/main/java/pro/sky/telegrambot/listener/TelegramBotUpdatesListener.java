@@ -40,6 +40,8 @@ import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static java.lang.Long.parseLong;
+
 
 /**
  * @author Home
@@ -107,7 +109,7 @@ class TelegramBotUpdatesListener implements UpdatesListener {
 
     @Override
     public int process(List<Update> updates) {
-        updates.forEach(update -> {
+        for (Update update : updates) {
             logger.info("Processing update: {}", update);
             var message = update.message();
             if (message != null) {
@@ -115,6 +117,7 @@ class TelegramBotUpdatesListener implements UpdatesListener {
                 var chatId = message.chat().id();
 
 
+                notificationScheduler.sendDailyMessage();
                 if (text != null) {
                     if ("/start".equals(text)) {
                         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(
@@ -174,24 +177,26 @@ class TelegramBotUpdatesListener implements UpdatesListener {
                     } else if ("/Report help".equals(text)) {
                         telegramBot.execute(new SendMessage(chatId, Constants.REPORT_HElP));
 
-                    } else if (text.contains("/Send report")) {
+                    } else if ("/Send report".equals(text)) {
+                        telegramBot.execute(new SendMessage(chatId, "Пришлите фото животного."));
 
-                        String[] sendReport = text.split(" ");
+
+                    } else if (text.contains("корм")) {
+
+                        String[] sendReport = text.split("\n");
                         Report report = new Report();
-                        report.setIdReport(Long.parseLong(sendReport[0]));
-                        report.setTheDiet(sendReport[1]);
-                        report.setBehaviour(sendReport[2]);
-                        report.setWellBeing(sendReport[3]);
-                        report.setHabits(sendReport[4]);
+                        report.setTheDiet(sendReport[0]);
+                        report.setBehaviour(sendReport[1]);
+                        report.setWellBeing(sendReport[2]);
+                        report.setHabits(sendReport[3]);
                         reportRepository.save(report);
                         telegramBot.execute(new SendMessage(chatId, "Спасибо, данные сохранены."));
-
                     } else if (reportStates.get(chatId) != null) {
                         methodReport(text, chatId);
+
                     } else {
                         telegramBot.execute(new SendMessage(chatId, "Извините, такая команда не поддерживается :("));
                     }
-                    notificationScheduler.sendDailyMessage();
 
                 }
                 if (update.message() != null && update.message().photo() != null) {
@@ -204,11 +209,14 @@ class TelegramBotUpdatesListener implements UpdatesListener {
                             "3. Общее самочувствие и привыкание к новому месту\n" +
                             "4. Новые привычки\n"));
                 }
-
             }
-        });
+        }
+
+
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
+
     }
+
 
     private void methodReport(String message, Long userId) {
         Report report = reportStates.get(userId);
@@ -247,9 +255,12 @@ class TelegramBotUpdatesListener implements UpdatesListener {
         reportStates.put(userId, report);
         telegramBot.execute(new SendMessage(userId, response));
     }
-
-
 }
+
+
+
+
+
 
 
 
