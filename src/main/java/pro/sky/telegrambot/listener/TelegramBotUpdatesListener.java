@@ -22,19 +22,25 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import pro.sky.telegrambot.configuration.TelegramBotConfiguration;
 import pro.sky.telegrambot.constants.Constants;
+import pro.sky.telegrambot.model.AppPhoto;
+import pro.sky.telegrambot.model.Report;
 import pro.sky.telegrambot.model.User;
-import pro.sky.telegrambot.repository.CatsRepository;
-import pro.sky.telegrambot.repository.DogsRepository;
-import pro.sky.telegrambot.repository.NotificationTaskRepository;
-import pro.sky.telegrambot.repository.UserRepository;
-import pro.sky.telegrambot.service.SaveContactData;
+import pro.sky.telegrambot.model.Volunteer;
+import pro.sky.telegrambot.repository.*;
+import pro.sky.telegrambot.scheduller.NotificationScheduler;
+import pro.sky.telegrambot.service.PhotoService;
+import pro.sky.telegrambot.service.VolunteerService;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static java.lang.Long.parseLong;
 
 
 /**
@@ -55,17 +61,33 @@ class TelegramBotUpdatesListener implements UpdatesListener {
     private DogsRepository dogsRepository;
     private static Constants constants;
     private final UserRepository userRepository;
+    private final VolunteerRepository volunteerRepository;
+    private final VolunteerService volunteerService;
+    private final PhotoRepository photoRepository;
+    private final PhotoService photoService;
+    private final NotificationScheduler notificationScheduler;
+    private final ReportRepository reportRepository;
+
+    private Map<Long, Report> reportStates = new HashMap<>();
 
 
     public TelegramBotUpdatesListener(TelegramBotConfiguration config, TelegramBot telegramBot,
                                       NotificationTaskRepository repository, CatsRepository catsRepository,
-                                      DogsRepository dogsRepository, UserRepository userRepository) {
+                                      DogsRepository dogsRepository, UserRepository userRepository,
+                                      VolunteerRepository volunteerRepository, VolunteerService volunteerService,
+                                      PhotoRepository photoRepository, PhotoService photoService, NotificationScheduler notificationScheduler, ReportRepository reportRepository) {
         this.config = config;
         this.telegramBot = telegramBot;
         this.repository = repository;
         this.catsRepository = catsRepository;
         this.dogsRepository = dogsRepository;
         this.userRepository = userRepository;
+        this.volunteerRepository = volunteerRepository;
+        this.volunteerService = volunteerService;
+        this.photoRepository = photoRepository;
+        this.photoService = photoService;
+        this.notificationScheduler = notificationScheduler;
+        this.reportRepository = reportRepository;
     }
 
     @PostConstruct
@@ -87,21 +109,23 @@ class TelegramBotUpdatesListener implements UpdatesListener {
 
     @Override
     public int process(List<Update> updates) {
-        updates.forEach(update -> {
+        for (Update update : updates) {
             logger.info("Processing update: {}", update);
             var message = update.message();
             if (message != null) {
-                var text = update.message().text();
-                var chatId = update.message().chat().id();
+                var text = message.text();
+                var chatId = message.chat().id();
 
 
+                notificationScheduler.sendDailyMessage();
                 if (text != null) {
                     if ("/start".equals(text)) {
                         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup(
                                 new String[]{"/Adopt an animal", "/Info"},
                                 new String[]{"/Dogs", "/Cats"},
                                 new String[]{"/Dog trainer advice", "/Call volunteer"},
-                                new String[]{"/Write data"});
+                                new String[]{"/Write data", "/Send report"},
+                                new String[]{"/Report help"});
                         replyKeyboardMarkup.oneTimeKeyboard(true);
                         replyKeyboardMarkup.resizeKeyboard(true);
                         replyKeyboardMarkup.selective(true);
@@ -127,6 +151,12 @@ class TelegramBotUpdatesListener implements UpdatesListener {
 
                     } else if ("/Call volunteer".equals(text)) {
                         telegramBot.execute(new SendMessage(chatId, Constants.CALL_VOLUNTEER));
+                        if (Constants.CALL_VOLUNTEER != null) {
+                            volunteerService.getAllVolunteers();
+                            volunteerRepository.getById(chatId);
+                            telegramBot.execute(new SendMessage(chatId, "Волонтеры уведомлены о вас." +
+                                    " В скором времени они с вами свяжутся"));
+                        }
                     } else if ("/Dog trainer advice".equals(text)) {
                         telegramBot.execute(new SendMessage(chatId, Constants.ADVICEDOGHADLER));
                         telegramBot.execute(new SendMessage(chatId, Constants.RECOMMENDEDDOGHANDLER));
@@ -144,19 +174,95 @@ class TelegramBotUpdatesListener implements UpdatesListener {
                         userRepository.save(user);
                         telegramBot.execute(new SendMessage(chatId, "Спасибо, данные сохранены."));
 
+                    } else if ("/Report help".equals(text)) {
+                        telegramBot.execute(new SendMessage(chatId, Constants.REPORT_HElP));
+
+                    } else if ("/Send report".equals(text)) {
+                        telegramBot.execute(new SendMessage(chatId, "Пришлите фото животного."));
+
+
+                    } else if (text.contains("корм")) {
+
+                        String[] sendReport = text.split("\n");
+                        Report report = new Report();
+                        report.setTheDiet(sendReport[0]);
+                        report.setBehaviour(sendReport[1]);
+                        report.setWellBeing(sendReport[2]);
+                        report.setHabits(sendReport[3]);
+                        reportRepository.save(report);
+                        telegramBot.execute(new SendMessage(chatId, "Спасибо, данные сохранены."));
+                    } else if (reportStates.get(chatId) != null) {
+                        methodReport(text, chatId);
+
+                    } else {
+                        telegramBot.execute(new SendMessage(chatId, "Извините, такая команда не поддерживается :("));
                     }
 
-                } else {
-                    telegramBot.execute(new SendMessage(chatId, "Извините, такая команда не поддерживается :("));
                 }
-
+                if (update.message() != null && update.message().photo() != null) {
+                    photoService.uploadPhoto(update.message());
+                    telegramBot.execute(new SendMessage(chatId, "Теперь напишите нам о рационе, состоянии поведения питомца," +
+                            "общем самочувствии, привыканию к новому месту, новые обретенные привычки.\n" +
+                            "В данном формате\n" +
+                            "1. Рацион\n" +
+                            "2. Поведение\n" +
+                            "3. Общее самочувствие и привыкание к новому месту\n" +
+                            "4. Новые привычки\n"));
+                }
             }
-        });
+        }
+
+
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
+
     }
 
 
+    private void methodReport(String message, Long userId) {
+        Report report = reportStates.get(userId);
+        String response;
+        switch (report.getState()) {
+            case "SEND_REPORT":
+                response = "Введите Рацион";
+                report.setState("THE_DIET");
+                break;
+            case "THE_DIET":
+                report.setTheDiet(message);
+                response = "Поведение";
+                report.setState("BEHAVIOUR");
+                break;
+            case "BEHAVIOUR":
+                if (message.matches("[а-яА-Я ,.]+")) {
+                    report.setBehaviour(message);
+                    response = "Общее самочувствие и привыкание к новому месту";
+                    report.setState("COMPLETED");
+                } else {
+                    response = "Дорогой усыновитель, мы заметили, что ты заполняешь отчет не так подробно, как необходимо." +
+                            " Пожалуйста, подойди ответственнее к этому занятию. " +
+                            "В противном случае волонтеры приюта будут обязаны самолично проверять условия содержания животного";
+                }
+                break;
+            case "COMPLETED":
+                response = "Спасибо! Все данные получены.";
+                reportRepository.save(report);
+                break;
+            default:
+                response = "Неизвестное состояние.";
+                break;
+        }
+
+        // Сохранение обновленного состояния пользователя
+        reportStates.put(userId, report);
+        telegramBot.execute(new SendMessage(userId, response));
+    }
 }
+
+
+
+
+
+
+
 
 
 
